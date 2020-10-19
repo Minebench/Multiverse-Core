@@ -93,6 +93,7 @@ import com.onarandombox.MultiverseCore.utils.MVMessaging;
 import com.onarandombox.MultiverseCore.utils.MVPermissions;
 import com.onarandombox.MultiverseCore.utils.MVPlayerSession;
 import com.onarandombox.MultiverseCore.utils.MaterialConverter;
+import com.onarandombox.MultiverseCore.utils.TestingMode;
 import com.onarandombox.MultiverseCore.utils.metrics.MetricsConfigurator;
 import com.onarandombox.MultiverseCore.utils.SimpleBlockSafety;
 import com.onarandombox.MultiverseCore.utils.SimpleLocationManipulation;
@@ -343,16 +344,23 @@ public class MultiverseCore extends JavaPlugin implements MVPlugin, Core {
     }
 
     private void setupMetrics() {
-        MetricsConfigurator.configureMetrics(this);
+        if (TestingMode.isDisabled()) {
+            MetricsConfigurator.configureMetrics(this);
+        }
     }
 
     /**
      * Initializes the buscript javascript library.
      */
     private void initializeBuscript() {
-        buscript = new Buscript(this);
-        // Add global variable "multiverse" to javascript environment
-        buscript.setScriptVariable("multiverse", this);
+        try {
+            buscript = new Buscript(this);
+            // Add global variable "multiverse" to javascript environment
+            buscript.setScriptVariable("multiverse", this);
+        } catch (NullPointerException e) {
+            buscript = null;
+            Logging.warning("Buscript failed to load! The script command will be disabled!");
+        }
     }
 
     private void initializeDestinationFactory() {
@@ -375,7 +383,7 @@ public class MultiverseCore extends JavaPlugin implements MVPlugin, Core {
         pm.registerEvents(this.entityListener, this);
         pm.registerEvents(this.weatherListener, this);
         pm.registerEvents(this.portalListener, this);
-        log(Level.INFO, "We are aware of the warning about the deprecated event. There is no alternative that allows us to do what we need to do. The performance impact is negligible.");
+        log(Level.INFO, ChatColor.GREEN + "We are aware of the warning about the deprecated event. There is no alternative that allows us to do what we need to do and performance impact is negligible. It is safe to ignore.");
         pm.registerEvents(this.worldListener, this);
         pm.registerEvents(new MVMapListener(this), this);
     }
